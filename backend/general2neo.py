@@ -1,24 +1,18 @@
-#To do : Fix the To and From fields. From will not be the table name
-#Optimise the generalised schema more 
-
-
-
 
 import json
 from neo4j import GraphDatabase 
 from py2neo import Graph
 
 # Parse the Schema
-with open('example.json','r') as f:
-    schema = json.load(f)
+# with open(f'schema/northwind-general.json','r') as f:
+#         schema = json.load(f)
 
 
-
-graph = Graph("bolt://localhost:7687", auth=("neo4j","12345678"))
+# graph = Graph("bolt://localhost:7687", auth=("neo4j","12345678"))
 
 # Create nodes in the Neo4j database
 
-def create_neo4j_nodes(schema):
+def create_neo4j_nodes(schema,graph):
   for table in schema:
       if schema[table]['Type'] == 'entity':
           data =  schema[table]['Data']
@@ -30,7 +24,7 @@ def create_neo4j_nodes(schema):
           
           query = f"CREATE (:{table} {{{d_str}}})"
           result = graph.run(query)
-          print(table + ' Done')
+        #   print(table + ' Done')
           # print(result)
 
 # def create_neo4j_relationships(schema):
@@ -46,7 +40,7 @@ def create_neo4j_nodes(schema):
 #             print(result)
 #             print(table + ' Done')
 #               # print(result)
-def create_neo4j_relationships(schema):
+def create_neo4j_relationships(schema,graph):
     for table in schema:
         if schema[table]['Type'] == 'relationship' and schema[table]['To']:
             data = schema[table]['Data']
@@ -56,17 +50,17 @@ def create_neo4j_relationships(schema):
 
             properties_str = ", ".join([f"{k}:'{v}'" if isinstance(v, str) else f"{k}:{v}" for k, v in d.items()])
             query = f"MATCH (from:`{from_node}`), (to:`{to_node}`) CREATE (from)-[r:RELATED_TO {{{properties_str}}}]->(to) RETURN r"
-            print(query) # Print the query to check for any errors
+            # print(query) # Print the query to check for any errors
             result = graph.run(query).data()
-            print(result)
-            print(table + ' Done')
+            # print(result)
+            # print(table + ' Done')
         elif schema[table]['Type'] == 'relationship' and not schema[table]['To']:
             print(f"No 'To' field found for relationship '{table}'") # Print a message for empty 'To' fields
 
             
             
-create_neo4j_nodes(schema)
-create_neo4j_relationships(schema)
+# create_neo4j_nodes(schema,graph)
+# create_neo4j_relationships(schema,graph)
 
 
 

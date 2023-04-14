@@ -161,7 +161,8 @@ def direction_of_relation(table,table_names,metadata):
 def get_data(table_name,engine,metadata):
     table = Table(table_name, metadata, autoload=True)
     # Select all rows from the table and convert to a list of dictionaries
-    rows = engine.execute(table.select()).fetchmany(20)
+    with engine.connect() as conn:
+        rows = conn.execute(table.select()).fetchmany(20)
     data = []
     # Loop over each row and create a dictionary of column name:value pairs
     for row in rows:
