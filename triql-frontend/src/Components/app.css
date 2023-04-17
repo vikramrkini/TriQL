@@ -217,6 +217,7 @@ body {
   font-size: 16px;
   font-weight: 500;
   text-transform: uppercase;
+  margin: 5px;
 }
 .generated-query__container {
   max-width: 50%;
@@ -238,4 +239,40 @@ body {
   max-width: 100%;
   background-color: transparent;
   overflow: auto;
+}
+
+.query-results {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.query-results h3 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.query-results table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.query-results th,
+.query-results td {
+  border: 1px solid #ccc;
+  text-align: left;
+  padding: 8px;
+  color: #2c3e50;
+}
+
+.query-results th {
+  background-color: #dce1e7;
+  font-weight: bold;
+}
+
+.query-results__container {
+  max-height: 200px; /* Adjust this value to set the maximum height for the scrollable area */
+  overflow-y: auto;
 }

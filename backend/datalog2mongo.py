@@ -45,15 +45,21 @@ def datalog_to_mongo(query):
     join_operation = parsed_query['join_conditions']
     where_clause = parsed_query['where_clause']
     where_clause = where_clause.split(',')
-
-    join_tables = re.findall('(\w+)\.(\w+\s*)',join_operation[0])
-    
-    # print(join_tables)
-    table1,table2 = join_tables[0][0],join_tables[1][0]
-    table1_attr, table2_attr = join_tables[0][1],join_tables[1][1]
-    #Constructing the lookup query 
-    lookup_operation = ''
     if join_operation:
+        join_tables = re.findall('(\w+)\.(\w+\s*)', join_operation[0])
+    else:
+    # Handle the case when join_operation is empty
+    # You can either set join_tables to an empty list or another default value
+        join_tables = []
+    table1,table1_attr = join_tables[0][0] ,join_tables[0][1]
+    # join_tables = re.findall('(\w+)\.(\w+\s*)',join_operation[0])
+    if join_operation:
+    # print(join_tables)
+        table2 = join_tables[0][0],join_tables[1][0]
+        table2_attr = join_tables[0][1],join_tables[1][1]
+    #Constructing the lookup query 
+        lookup_operation = ''
+  
         lookup_operation = "{ $lookup : { from : " + table2 + ', localField : ' + table1_attr + ', foreignField : ' + table2_attr + ', as : ' + table1 +'_'+table2 + '}} , { $unwind : $' +  table1 +'_'+table2 + "}"
     match_conditions = ''
     if where_clause != ['']:
@@ -85,13 +91,11 @@ def datalog_to_mongo(query):
     return query 
         
 
-# tables = ["Orders","Customers"]
-# attributes = ["OrderID","UnitPrice","OrderDate"]
-# conditions = ["OrderID > 5000"]
-# query = generate_datalog_query(schema,tables, attributes, conditions)
+
+datalog = "(Orders.OrderID) :- Orders(OrderID , CustomerID , EmployeeID , OrderDate , RequiredDate , ShippedDate , ShipVia , Freight , ShipName , ShipAddress , ShipCity , ShipRegion , ShipPostalCode , ShipCountry) ; Orders.OrderID < 10250"
 # # print(parse_query(query))
-query = "(Customers.CompanyName) :- Customers(CustomerID , CompanyName , ContactName , ContactTitle , Address , City , Region , PostalCode , Country , Phone , Fax) ,Orders(OrderID , CustomerID , EmployeeID , OrderDate , RequiredDate , ShippedDate , ShipVia , Freight , ShipName , ShipAddress , ShipCity , ShipRegion , ShipPostalCode , ShipCountry) ; (Orders.CustomerID = Customers.CustomerID);"
-mongo_query = datalog_to_mongo(query)
+# query = "(Customers.CompanyName) :- Customers(CustomerID , CompanyName , ContactName , ContactTitle , Address , City , Region , PostalCode , Country , Phone , Fax) ,Orders(OrderID , CustomerID , EmployeeID , OrderDate , RequiredDate , ShippedDate , ShipVia , Freight , ShipName , ShipAddress , ShipCity , ShipRegion , ShipPostalCode , ShipCountry) ; (Orders.CustomerID = Customers.CustomerID);"
+mongo_query = datalog_to_mongo(datalog)
 print(mongo_query)
 
  

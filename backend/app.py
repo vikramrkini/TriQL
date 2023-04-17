@@ -10,6 +10,7 @@ import json
 from pymongo import MongoClient
 from neo4j import GraphDatabase 
 from py2neo import Graph
+import pandas as pd
 import pprint
 from sql2general import get_list_of_table_names, determine_entity_relation, direction_of_relation,get_mapping_cardinality,get_attributes_and_constraints,get_data
 from general2mongo import delete_all_collections, general2mongo,load_schema_data_in_mongo,convert_general_to_mongo
@@ -17,6 +18,8 @@ from general2neo import create_neo4j_nodes, create_neo4j_relationships
 from generateDatalog import generate_datalog_query
 from datalog2sql import datalog_to_sql
 from datalog2mongo import datalog_to_mongo
+
+from runquery import run_SQL_query
 app = Flask(__name__)
 CORS(app)
 
@@ -144,6 +147,19 @@ def datalog_to_sql_endpoint():
     print(SQL_query)
     return jsonify({'SQL_query': SQL_query})
 
+@app.route('/run_sql_query', methods=['POST'])
+def run_sql_query_endpoint():
+    data = request.json
+    schema_name = data['schemaName']
+    sql_query = data['sqlQuery']
+    database_path = f'schema/{schema_name}.db'
+    result = run_SQL_query(database_path, sql_query)
+    print(result)
+    return jsonify({'data':result})
+    # result_list = [dict(row) for row in result]
+    # return jsonify({'data': result_list})
+
+
 @app.route('/datalog_to_mongo', methods=['POST'])
 def datalog_to_mongo_endpoint():
     data = request.json
@@ -151,6 +167,8 @@ def datalog_to_mongo_endpoint():
     query = data['query']
     mongo_query = datalog_to_mongo(query)
     return jsonify({'mongo_query': mongo_query})
+
+
 
 if __name__ == '__main__':
     app.debug = True
