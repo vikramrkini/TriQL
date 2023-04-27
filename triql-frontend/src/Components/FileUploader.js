@@ -80,7 +80,7 @@ function FileUploader() {
 
       setUploadStatus(response.data.message);
     } catch (error) {
-      setUploadStatus('An error occurred while uploading the file.');
+      // setUploadStatus('An error occurred while uploading the file.');
     }
   };
 

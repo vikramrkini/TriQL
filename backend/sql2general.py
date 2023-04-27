@@ -29,13 +29,28 @@ class CustomEncoder(json.JSONEncoder):
 #     sql = sql_file.read()
 #     cur.executescript(sql)
 
+def execute_sql_file(filename, engine):
+    with open(filename, "r") as sql_file:
+        sql = sql_file.read()
+
+    statements = sql.split(';')
+
+    with engine.begin() as conn:
+        for statement in statements:
+            # Execute each statement
+            conn.execute(statement)
+
+
 
 # # Replace the placeholders with your database credentials
-# engine = create_engine('sqlite:///northwind.db?')
+# engine = create_engine('sqlite:///schema/northwind.db?')
+# execute_sql_file('schema/northwind.sql', engine)
+
 # inspector = inspect(engine)
 # cursor = engine
 # metadata = MetaData()
 # metadata.reflect(bind=engine)
+
 
 # Define a function to determine whether a table is an entity or a relationship
 def get_table_type(table_name,metadata):
@@ -82,7 +97,7 @@ def get_list_of_table_names(inspector):
     # table_names = engine.table_names()
     table_names = inspector.get_table_names()
     #Removing the last sqllite_sequence from the table 
-    table_names.pop(-1)
+    # table_names.pop(-1)
     return table_names
 
 def get_list_of_table_foreign_keys(table_names,metadata):
@@ -226,4 +241,4 @@ import pprint as pp
    
 #     with open('general.json', 'w') as json_file:
 #         json.dump(schema, json_file, indent=4)
-    
+# print(get_list_of_table_names(inspector))

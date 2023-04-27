@@ -13,7 +13,7 @@ def get_joining_attribute(schema, tables):
           if schema[table]['To']:
             #    print(schema[table]['To'])
                for table_join in schema[table]['To']:
-                    if table_join[1] in tables:
+                    if table_join[1] in tables and table != table_join[1]:
                          
                          #Join the table 
                          join.append(table +'.'+table_join[0] + ' = ' + table_join[1]+'.'+table_join[0])

@@ -8,6 +8,7 @@ function FileListDropdown() {
   const [selectedFile, setSelectedFile] = useState('');
   const [tables, setTables] = useState([]);
   const [selectedAttributes, setSelectedAttributes] = useState([]);
+  const [showSchemaPopup, setShowSchemaPopup] = useState(false);
 
   useEffect(() => {
     fetchFileList();
@@ -60,6 +61,37 @@ function FileListDropdown() {
     }
   };
 
+  const [schema, setSchema] = useState(null);
+
+const fetchSchema = async () => {
+  try {
+    const response = await fetch(`http://127.0.0.1:5000/show_schema/${selectedFile}`, {
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    });
+    const fetchedSchema = await response.json();
+    console.log(fetchedSchema)
+    setSchema(fetchedSchema);
+    setShowSchemaPopup(true);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+  const SchemaModal = () => (
+    <div className="modal" style={{ display: showSchemaPopup ? 'block' : 'none' }}>
+      <div className="modal-content">
+        <span className="close" onClick={() => setShowSchemaPopup(false)}>
+          &times;
+        </span>
+        <pre>{schema && JSON.stringify(schema, null, 2)}</pre>
+      </div>
+    </div>
+  );
+  
   const handleFileSelect = (event) => {
     setSelectedFile(event.target.value);
   };
@@ -101,7 +133,9 @@ function FileListDropdown() {
   return (
     <div className="app">
       <div className="sidebar">
+
         <FileUploader />
+        <button onClick={fetchSchema} className='query-builder__button'>Show Schema</button>
         <h1>Select Schema:</h1>
         <select class = "custom-dropdown" value={selectedFile} onChange={handleFileSelect}>
           {fileList.map((fileName, index) => (
@@ -109,6 +143,7 @@ function FileListDropdown() {
               {fileName}
             </option>
           ))}
+          
         </select>
         <h1>Entities:</h1>
         {tables.length > 0 ? (
@@ -137,6 +172,7 @@ function FileListDropdown() {
         )}
       </div>
       <div className="main">
+      
       <QueryBuilder
         selectedAttributes={tables
           .map((table) =>
@@ -150,8 +186,11 @@ function FileListDropdown() {
           .flat()}
           schemaName={selectedFile}
       />
+      <SchemaModal />
       </div>
+      
     </div>
+    
   );
   }
 export default FileListDropdown; 

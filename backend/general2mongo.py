@@ -32,6 +32,8 @@ def convert_general_to_mongo(schema):
                     mongo_type = 'date'
                 elif col_type == 'BLOB':
                     mongo_type = 'binary'
+                elif col_type == "NULL":
+                    mongo_type = 'null'
                 else:
                     raise ValueError(f"Unsupported data type {col_type}")
                 mongo_table[col_name] = {'type': mongo_type}
@@ -39,7 +41,6 @@ def convert_general_to_mongo(schema):
                     mongo_table[col_name]['primary_key'] = True
                 if not col_dict['nullable']:
                     mongo_table[col_name]['required'] = True
-
             # else :
             #     if table_dict['Cardinality'][1] == "1->1":
             #         #Embed the code of in the [cardinality][0]

@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 import sqlite3
+import re
 # database_path = 'schema/northwind.db'
 # sql_query = "SELECT Customers.CustomerID, Customers.CompanyName FROM Orders JOIN Customers ON Orders.CustomerID = Customers.CustomerID"
 
@@ -27,4 +28,3 @@ def run_SQL_query(database_path, query):
     return result
 
 
-# print(run_query(database_path,sql_query))

@@ -1663,11 +1663,11 @@
         "Type": "entity",
         "Cardinality": [
             [
-                "Suppliers",
+                "Categories",
                 "M->1"
             ],
             [
-                "Categories",
+                "Suppliers",
                 "M->1"
             ]
         ],
@@ -1756,12 +1756,12 @@
         "From": "Products",
         "To": [
             [
-                "SupplierID",
-                "Suppliers"
-            ],
-            [
                 "CategoryID",
                 "Categories"
+            ],
+            [
+                "SupplierID",
+                "Suppliers"
             ]
         ],
         "Data": [
@@ -2625,6 +2625,56 @@
                 "TerritoryID": "27403",
                 "TerritoryDescription": "Greensboro                                        ",
                 "RegionID": 1
+            }
+        ]
+    },
+    "sqlite_sequence": {
+        "Type": "entity",
+        "Cardinality": [],
+        "Attributes": [
+            {
+                "name": "name",
+                "type": "NULL",
+                "nullable": true,
+                "default": null,
+                "autoincrement": "auto",
+                "primary_key": 0
+            },
+            {
+                "name": "seq",
+                "type": "NULL",
+                "nullable": true,
+                "default": null,
+                "autoincrement": "auto",
+                "primary_key": 0
+            }
+        ],
+        "From": "sqlite_sequence",
+        "To": [],
+        "Data": [
+            {
+                "name": "Categories",
+                "seq": 8
+            },
+            {
+                "name": "Employees",
+                "seq": 9
+            },
+            {
+                "name": "Orders",
+                "seq": 11077
+            },
+            {
+                "name": "Products",
+                "seq": 77
+            },
+            {
+                "name": "Shippers",
+                "seq": 3
+            },
+            {
+                "name": "Suppliers",
+                "seq": 29
             }
         ]
     }
