@@ -5,8 +5,8 @@ TriQL is a versatile database query tool designed to streamline query generation
 ## Prerequisites
 To run the application, make sure you have the following installed on your system:
 
-Neo4j Desktop
-Node.js
+1. Neo4j Desktop
+2. Node.js
 
 ## Steps to Run the Application
 1. Create a new Neo4j database.
