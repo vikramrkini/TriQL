@@ -1,1 +1,11 @@
 backend/schema/
+genral.json
+IMDB.sql
+movies.sql
+northwind.db
+northwind.sql
+sample.sql
+sms.sql
+sqldump2mongo.py
+testdb.sql
+testing_new_schema.py
