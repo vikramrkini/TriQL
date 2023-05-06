@@ -1,6 +1,6 @@
 backend/schema/
-genral.json
-IMDB.sql
+general.json
+IMDb.sql
 movies.sql
 northwind.db
 northwind.sql
