@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef,useState, useEffect } from 'react';
 import neo4j from 'neo4j-driver';
-// import {Network} from 'react-vis-network';
-import { ForceGraph2D } from 'react-force-graph';
+import { Network } from 'vis-network';
+import 'vis-network/styles/vis-network.min.css';
 
 import './app.css';
 
@@ -15,8 +15,9 @@ const QueryBuilder = ({ selectedAttributes = [], schemaName }) => {
   const [mongoQueryResults, setMongoQueryResults] = useState(null);
   const [cypherQuery, setCypherQuery] = useState('');
   const [cypherQueryResults, setCypherQueryResults] = useState(null);
+  
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
-
+  const graphContainer = useRef(null);
 const sqlKeywords = ['SELECT', 'WHERE', 'FROM', 'GROUP BY', 'HAVING', 'ORDER BY', 'RETURN', 'MATCH'];
 const mongoKeywords = ['$match', '$project', '$group', '$sort', '$lookup', '$unwind', '$limit', '$skip'];
 
@@ -26,7 +27,6 @@ function formatQuery(query, keywords) {
     return formattedQuery.replace(regex, ` \n${keyword} `);
   }, query);
 }
-
 // function formatMongoQuery(query) {
 //   const formattedQuery = query.replace(/{/g, '{\n').replace(/,/g, ',\n');
 //   return formattedQuery;
@@ -201,32 +201,7 @@ function formatMongoQuery(query) {
   };
 
 
-  // const convertCypherResultsToGraph = (cypherResults) => {
-  //   const nodes = [];
-  //   const edges = [];
   
-  //   cypherResults.forEach((record) => {
-  //     // Check if the record contains nodes or relationships
-  //     if (record._fields) {
-  //       record._fields.forEach((field) => {
-  //         if (field.labels) { // If it's a node
-  //           nodes.push({
-  //             id: field.identity.low,
-  //             label: `${field.labels[0]}: ${field.properties.name}`,
-  //           });
-  //         } else if (field.type) { // If it's a relationship
-  //           edges.push({
-  //             source: field.start.low,
-  //             target: field.end.low,
-  //             label: field.type,
-  //           });
-  //         }
-  //       });
-  //     }
-  //   });
-  
-  //   return { nodes, edges };
-  // };
   const convertCypherResultsToGraph = (data) => {
     const nodes = [];
     const edges = [];
@@ -272,13 +247,154 @@ function formatMongoQuery(query) {
     // console.log(graphData)
     // setGraphData(graphData);
   };
+  // const displayGraph = (nodes, edges) => {
+  //   // const data = {
+  //   //   nodes: nodes,
+  //   //   edges: edges,
+  //   // };
 
-
+  //   // const options = {
+       
+        
+  //   // };
+  //   // new Network(graphContainer.current, data, options);
+  //   setGraphData({ nodes, edges });
+  // };
+  // const fetchAndDisplayGraph = async () => {
+  //   const response = await fetch('http://127.0.0.1:5000/generate_graph', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({ cypherQuery: cypherQuery }),
+  //   });
   
+  //   const graphData = await response.json();
+  //   console.log(graphData);
+  
+  //   // Call createGraph after updating the state with the fetched graph data
+  //   createGraph(graphData.nodes, graphData.relationships);
+  // };
+  const fetchAndDisplayGraph = async () => {
+    const response = await fetch('http://127.0.0.1:5000/generate_graph', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cypherQuery: cypherQuery }),
+    });
+  
+    const graphData = await response.json();
+    console.log(graphData);
+  
+    if (graphContainer.current) {
+      const data = {
+        nodes: graphData.nodes,
+        edges: graphData.relationships,
+      };
+      const options = {
+       nodes: {
+          shape: 'dot',
+          scaling: {
+            min: 10,
+            max: 30,
+            label: {
+              min: 8,
+              max: 30,
+              drawThreshold: 12,
+              maxVisible: 20
+            }
+          },
+          font: {
+            size: 12,
+            face: 'Tahoma'
+          }
+        },
+        edges: {
+          width: 0.15,
+          color: { inherit: 'from' },
+          smooth: {
+            type: 'continuous'
+          }
+        },
+        physics: {
+          stabilization: false,
+          barnesHut: {
+            gravitationalConstant: -80000,
+            springConstant: 0.001,
+            springLength: 200
+          }
+        },
+        interaction: {
+          tooltipDelay: 200,
+          hideEdgesOnDrag: true
+        }
+  //     };
+      };
+  
+      const network = new Network(graphContainer.current, data, options);
+  
+      // Clear the existing nodes and edges datasets
+      network.body.data.nodes.clear();
+      network.body.data.edges.clear();
+  
+      // Add the new nodes and edges
+      network.body.data.nodes.add(graphData.nodes);
+      network.body.data.edges.add(graphData.relationships);
+    }
+  };
+  // const createGraph = (nodes, edges) => {
+  //   if (graphContainer.current) {
+  //     const data = {
+  //       nodes,
+  //       edges
+  //     };
+  //     const options = {
+  //       nodes: {
+  //         shape: 'dot',
+  //         scaling: {
+  //           min: 10,
+  //           max: 30,
+  //           label: {
+  //             min: 8,
+  //             max: 30,
+  //             drawThreshold: 12,
+  //             maxVisible: 20
+  //           }
+  //         },
+  //         font: {
+  //           size: 12,
+  //           face: 'Tahoma'
+  //         }
+  //       },
+  //       edges: {
+  //         width: 0.15,
+  //         color: { inherit: 'from' },
+  //         smooth: {
+  //           type: 'continuous'
+  //         }
+  //       },
+  //       physics: {
+  //         stabilization: false,
+  //         barnesHut: {
+  //           gravitationalConstant: -80000,
+  //           springConstant: 0.001,
+  //           springLength: 200
+  //         }
+  //       },
+  //       interaction: {
+  //         tooltipDelay: 200,
+  //         hideEdgesOnDrag: true
+  //       }
+  //     };
+  //     new Network(graphContainer.current, data, options);
+  //   }
+  // };
   
   return (
     <div className="query-builder">
       <div className="query-builder__content"> 
+      <center><h1>TriQL</h1></center>
       <h2>Query Builder</h2>
       <div className="selected-attributes">
       <h3>Selected Attributes:</h3>
@@ -449,6 +565,11 @@ function formatMongoQuery(query) {
       </button>
     )}
     {cypherQuery && (
+      <button onClick={fetchAndDisplayGraph} className="query-builder__button">
+        Show Graph
+      </button>
+    )}
+    {cypherQuery && (
       <button onClick={() => setCypherQueryResults(null)} className="query-builder__button">
         Hide Results
         </button>
@@ -478,6 +599,7 @@ function formatMongoQuery(query) {
           </tbody>
         </table>
       </div>
+      <div ref={graphContainer} style={{ width: '800px', height: '600px' }}></div>
     </div>
   )}
     </div>

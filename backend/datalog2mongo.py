@@ -33,7 +33,7 @@ def parse_query(query):
         'join_conditions': join_conditions,
         'where_clause': where_clause
     }
-
+    
     return parsed_query
 
 def datalog_to_mongo(tables,query):

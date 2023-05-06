@@ -96,24 +96,6 @@ const fetchSchema = async () => {
     setSelectedFile(event.target.value);
   };
 
-  // const handleAttributeSelect = (event, tableName, attributeName) => {
-  //   const isChecked = event.target.checked;
-  //   setTables((prevTables) =>
-  //     prevTables.map((table) =>
-  //       table.tableName === tableName
-  //         ? {
-  //             ...table,
-  //             columnNames: table.columnNames.map((column) =>
-  //               column.name === attributeName ? { ...column, checked: isChecked } : column
-  //             ),
-  //           }
-  //         : table
-  //     )
-  //   );
-  //   setSelectedAttributes((prevSelectedAttributes) =>
-  //     isChecked ? [...prevSelectedAttributes, { tableName, attributeName }] : prevSelectedAttributes.filter((attr) => attr.attributeName !== attributeName)
-  //   );
-  // };
   const handleAttributeSelect = (event, tableName, attributeName) => {
     const updatedTables = tables.map((table) => {
       if (table.tableName === tableName) {
@@ -172,7 +154,6 @@ const fetchSchema = async () => {
         )}
       </div>
       <div className="main">
-      
       <QueryBuilder
         selectedAttributes={tables
           .map((table) =>

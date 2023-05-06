@@ -26,7 +26,7 @@ def convert_general_to_mongo(schema):
                     mongo_type = 'int'
                 elif col_type == 'REAL':
                     mongo_type = 'double'
-                elif col_type == 'TEXT':
+                elif col_type == 'TEXT' or col_type == 'VARCHAR':
                     mongo_type = 'string'
                 elif col_type == 'DATE' or col_type == 'DATETIME':
                     mongo_type = 'date'

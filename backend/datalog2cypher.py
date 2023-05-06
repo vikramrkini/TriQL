@@ -111,7 +111,7 @@ def datalog_to_cypher(schema,datalog_query):
     for pair in relationships:
         from_node, to_node = pair
         if from_node in node_names and to_node in node_names:
-            match_clause += f"({from_node}:{from_node})-[:{relationships[pair]}]->({to_node}:{to_node}),"
+            match_clause += f"({from_node}:{from_node})-[{relationships[pair]}:{relationships[pair]}]->({to_node}:{to_node}),"
             connected_nodes.add(from_node)
             connected_nodes.add(to_node)
     
@@ -128,15 +128,19 @@ def datalog_to_cypher(schema,datalog_query):
         join_conditions = "WHERE "
         for join_condition in parsed_query['join_conditions']:
             left, operator, right = join_condition.split(" ")
+            print(operator)
             operator = "<>" if operator == '!=' else operator
             join_conditions += f"{left} {operator} {right} AND "
         join_conditions = join_conditions[:-5]
 
     # Construct where clause
     where_clause = ""
+    print(parsed_query['where_clause'])
     if parsed_query['where_clause']:
         where_clause = parsed_query['where_clause']
+        
         where_clause = where_clause.replace(',', ' AND ')
+        where_clause = where_clause.replace('!=', '<>')
         if join_conditions:
             where_clause = "AND " + where_clause
         else:

@@ -93,11 +93,11 @@
         "Type": "relationship",
         "Cardinality": [
             [
-                "Customers",
+                "CustomerDemographics",
                 "1->1"
             ],
             [
-                "CustomerDemographics",
+                "Customers",
                 "1->1"
             ]
         ],
@@ -122,12 +122,12 @@
         "From": "CustomerCustomerDemo",
         "To": [
             [
-                "CustomerID",
-                "Customers"
-            ],
-            [
                 "CustomerTypeID",
                 "CustomerDemographics"
+            ],
+            [
+                "CustomerID",
+                "Customers"
             ]
         ],
         "Data": []
@@ -987,11 +987,11 @@
         "Type": "relationship",
         "Cardinality": [
             [
-                "Orders",
+                "Products",
                 "1->1"
             ],
             [
-                "Products",
+                "Orders",
                 "1->1"
             ]
         ],
@@ -1040,12 +1040,12 @@
         "From": "Order Details",
         "To": [
             [
-                "OrderID",
-                "Orders"
-            ],
-            [
                 "ProductID",
                 "Products"
+            ],
+            [
+                "OrderID",
+                "Orders"
             ]
         ],
         "Data": [
@@ -1663,11 +1663,11 @@
         "Type": "entity",
         "Cardinality": [
             [
-                "Categories",
+                "Suppliers",
                 "M->1"
             ],
             [
-                "Suppliers",
+                "Categories",
                 "M->1"
             ]
         ],
@@ -1756,12 +1756,12 @@
         "From": "Products",
         "To": [
             [
-                "CategoryID",
-                "Categories"
-            ],
-            [
                 "SupplierID",
                 "Suppliers"
+            ],
+            [
+                "CategoryID",
+                "Categories"
             ]
         ],
         "Data": [

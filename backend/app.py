@@ -1,7 +1,10 @@
 import os
+import requests
+import sqlalchemy
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from sqlalchemy import create_engine, MetaData , Table, distinct, func, inspect , select
+
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy import text
 from sqlalchemy.orm import class_mapper
@@ -26,9 +29,11 @@ from runquery import run_SQL_query
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/home')
-def home():
-    return render_template('index.html')
+mysql_username = "root"
+mysql_password = ""
+mysql_host = "localhost"
+mysql_port = "3306"
+
 
 @app.route('/sqlschema', methods=['POST'])
 def sqlschema():
@@ -39,7 +44,7 @@ def sqlschema():
     if file.filename == '':
         return jsonify({'error': 'Empty file name provided'})
     
-    if not file.filename.endswith('.sql'):
+    if not file.filename.endswith('.sql') or file.filename.endswith('.sqlite'):
         return jsonify({'error': 'Invalid file type'})
     
     schema_dir = 'schema'
@@ -49,34 +54,34 @@ def sqlschema():
     file_path = os.path.join(schema_dir, file.filename)
     file.save(file_path)
     filename = file.filename
-    #Creating a sqlite database
+    # Creating a sqlite database
     print(os.listdir("schema")) 
-    # con = sqlite3.connect(f"schema/{filename[:-4]}.db")
-    # cur = con.cursor()
-    # with open(f"schema/{filename}", 'r') as sql_file:
-    #     sql = sql_file.read()
-    #     cur.executescript(sql)
+        # Creating a sqlite database
+    con = sqlite3.connect(f"schema/{filename[:-4]}.db")
+    cur = con.cursor()
+    with open(f"schema/{filename}", 'r') as sql_file:
+        sql = sql_file.read()
+        cur.executescript(sql)
+
+  
+    with open(f"schema/{filename}", 'r') as sql_file:
+        sql = sql_file.read()
+        cur.executescript(sql)
     
 # Replace the placeholders with your database credentials
     engine = create_engine(f'sqlite:///schema/{filename[:-4]}.db?')
-    with open(f'schema/{filename[:-4]}.sql', "r") as sql_file:
-        sql = sql_file.read()
-
-    # Split the SQL script into separate statements
-    statements = sql.split(';')
-
-    with engine.begin() as conn:
-        for statement in statements:
-            # Execute each statement
-            conn.execute(statement)
-
+    # Creating a MySQL database
     # execute_sql_file(f'schema/{filename[:-4]}',engine)
     inspector = inspect(engine)
     # cursor = engine
     metadata = MetaData()
     metadata.reflect(bind=engine)
+    # schema_name = engine.url.database
+    # metadata.reflect(bind=engine, schema=schema_name)
+
     schema = {}
     table_names = get_list_of_table_names(inspector)
+    print(table_names)
     for table in table_names:
         schema[table] =  {'Type' : determine_entity_relation(table,table_names,metadata) , 'Cardinality' : get_mapping_cardinality(table,metadata) , 'Attributes' : get_attributes_and_constraints(table,engine) ,'From' : direction_of_relation(table,table_names,metadata)[0],'To' : direction_of_relation(table,table_names,metadata)[1], 'Data' : get_data(table,engine,metadata)} 
    
@@ -89,9 +94,7 @@ def sqlschema():
     table_name_attr = retrieve_info(f'{filename[:-4]}.db')
     load_neo(schema)
     load_mongo(schema)
-    # print(neo4j,mongo)
-    # return jsonify({'Loaded' : schema })\
-    print(table_name_attr)
+    
     return table_name_attr
 
 def load_mongo(schema):
@@ -104,8 +107,6 @@ def load_mongo(schema):
     # return "MongoDB - Loaded"
     
 def load_neo(schema):
-    # with open('example.json','r') as f:
-    #     schema = json.load(f)
     graph = Graph("bolt://localhost:7687", auth=("neo4j","12345678"))
     graph.delete_all()
     create_neo4j_nodes(schema,graph)
@@ -120,15 +121,7 @@ def get_schemas():
     return jsonify({'fileList': files})
 
 @app.route('/show_schema/<string:schema_name>', methods=['GET'])
-# def show_schema(schema_name):
-#     schema_path = os.path.join('schema', f'{schema_name}-general.json')
-#     if os.path.exists(schema_path):
-#         with open(schema_path, 'r') as f:
-#             schema = json.load(f)
-        
-#         return jsonify(schema)
-#     else:
-#         return jsonify({'error': 'Schema not found'}), 404
+
 def show_schema(schema_name):
     schema_path = os.path.join('schema', f'{schema_name}-general.json')
     if os.path.exists(schema_path):
@@ -221,15 +214,16 @@ def run_mongo_query_endpoint():
     data = request.json
     filename = data.get('filename')
     query = data.get('query')
-
+    # print(query)
     with open(f'schema/{filename}-general.json', 'r') as f:
         schema = json.load(f)
     load_mongo(schema)
     collection = re.findall(r'db\.(\w+)\.aggregate', query)[0]
-
+    # print(collection)
     # Extract aggregation pipeline
-    pipeline = re.findall(r'aggregate\((.+)\)', query)[0]
-    print(pipeline)
+    # pipeline = re.findall(r'aggregate\((.+)\)', query)[0] 
+    pipeline = re.findall(r'aggregate\((.*?)\)', query, re.DOTALL)[0]
+    # print(pipeline)
 
     # Convert the pipeline string into a list
     pipeline = re.sub(r'(?<!")(\$\w+|from|localField|foreignField|as)(?!")', r'"\1"', pipeline)
@@ -254,26 +248,6 @@ def convert_datalog_to_cypher():
     cypher_query = datalog_to_cypher(schema,query)
     return jsonify({'cypher_query': cypher_query})
 
-# @app.route('/run_cypher_query', methods=['POST'])
-# def run_cypher_query_endpoint():
-#     data = request.json
-#     schema_name = data['schemaName']
-#     cypher_query = data['cypherQuery']
-    
-#     with open(f'schema/{schema_name}-general.json', 'r') as f:
-#         schema = json.load(f)
-#     load_neo(schema)
-#     driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12345678"))
-
-#     def execute_query(tx, query):
-#         result = tx.run(query)
-#         return [record.data() for record in result]
-
-#     with driver.session() as session:
-#         result = session.execute_read(execute_query, cypher_query)
-#     print(result)
-#     return jsonify({'data': result})
-
 @app.route('/run_cypher_query', methods=['POST'])
 def run_cypher_query_endpoint():
     data = request.json
@@ -286,6 +260,59 @@ def run_cypher_query_endpoint():
     driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12345678"))
     data = run_cypher_query(driver,cypher_query)
     return jsonify({"data" : data})
+
+@app.route('/generate_graph', methods=['POST'])
+def generate_graph():
+    # Neo4j server credentials
+    neo4j_url = 'http://localhost:7474/db/neo4j/tx/commit'
+    headers = {'Content-Type': 'application/json'}
+    username = 'neo4j'
+    password = '12345678'
+
+    # Authenticate the REST API request
+    auth = (username, password)
+
+    data = request.json
+    cypher_query = data['cypherQuery']
+
+    # Modify the Cypher query
+    modified_query = modify_cypher_query(cypher_query)
+
+    # Execute the modified Cypher query
+    data = {'statements': [{'statement': modified_query}]}
+    response = requests.post(neo4j_url, headers=headers, auth=auth, json=data)
+
+    # Extract nodes and relationships from the JSON response
+    nodes, relationships = extract_nodes_relationships(response.json())
+
+    # Return the nodes and relationships as JSON
+    return jsonify({'nodes': nodes, 'relationships': relationships})
+
+def modify_cypher_query(query):
+    # Extract all parts of the query that match the pattern (label:label)
+    matches = re.findall(r'\(([a-zA-Z]+):[a-zA-Z]+\)', query)
+    matches.extend(re.findall(r'\[([a-zA-Z0-9_]*):',query))
+    print(matches)
+    
+    # Replace the RETURN statement with the new one
+    return_statement = 'RETURN ' + ', '.join([f'{match}' for match in matches])
+    modified_query = re.sub(r'RETURN .+', return_statement, query)
+
+    return modified_query
+def extract_nodes_relationships(response):
+    
+    nodes = []
+    relationships = []
+    
+    for result in response['results']:
+        for row_data in result['data']:
+            for meta_item in row_data['meta']:
+                if meta_item['type'] == 'node':
+                    nodes.append(meta_item)
+                elif meta_item['type'] == 'relationship':
+                    relationships.append(meta_item)
+                    
+    return nodes, relationships
 
 if __name__ == '__main__':
     app.debug = True
