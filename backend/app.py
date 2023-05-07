@@ -55,7 +55,7 @@ def sqlschema():
     file.save(file_path)
     filename = file.filename
     # Creating a sqlite database
-    print(os.listdir("schema")) 
+    # print(os.listdir("schema")) 
         # Creating a sqlite database
     con = sqlite3.connect(f"schema/{filename[:-4]}.db")
     cur = con.cursor()
@@ -81,7 +81,7 @@ def sqlschema():
 
     schema = {}
     table_names = get_list_of_table_names(inspector)
-    print(table_names)
+    # print(table_names)
     for table in table_names:
         schema[table] =  {'Type' : determine_entity_relation(table,table_names,metadata) , 'Cardinality' : get_mapping_cardinality(table,metadata) , 'Attributes' : get_attributes_and_constraints(table,engine) ,'From' : direction_of_relation(table,table_names,metadata)[0],'To' : direction_of_relation(table,table_names,metadata)[1], 'Data' : get_data(table,engine,metadata)} 
    
@@ -169,7 +169,7 @@ def generate_datalog():
     tables = data['tables']
     attributes = data['attributes']
     conditions = data['conditions']
-    print(schema_name,tables,attributes,conditions)
+    # print(schema_name,tables,attributes,conditions)
     with open(f'schema/{schema_name}-general.json', 'r') as f:
         schema = json.load(f)
 
@@ -182,7 +182,7 @@ def datalog_to_sql_endpoint():
     tables = data['tables']
     query = data['query']
     SQL_query = datalog_to_sql(tables, query)
-    print(SQL_query)
+    # print(SQL_query)
     return jsonify({'SQL_query': SQL_query})
 
 @app.route('/run_sql_query', methods=['POST'])
@@ -192,7 +192,7 @@ def run_sql_query_endpoint():
     sql_query = data['sqlQuery']
     database_path = f'schema/{schema_name}.db'
     result = run_SQL_query(database_path, sql_query)
-    print(result)
+    # print(result)
     return jsonify({'data':result})
     # result_list = [dict(row) for row in result]
     # return jsonify({'data': result_list})
@@ -229,7 +229,7 @@ def run_mongo_query_endpoint():
     pipeline = re.sub(r'(?<!")(\$\w+|from|localField|foreignField|as)(?!")', r'"\1"', pipeline)
     pipeline = eval(pipeline)
     
-    print(pipeline)
+    # print(pipeline)
 
     try:
         result = list(db[collection].aggregate(pipeline))
@@ -284,6 +284,8 @@ def generate_graph():
 
     # Extract nodes and relationships from the JSON response
     nodes, relationships = extract_nodes_relationships(response.json())
+    # print("Nodes:", nodes[0])
+    # print("Relationships:", relationships[0])
 
     # Return the nodes and relationships as JSON
     return jsonify({'nodes': nodes, 'relationships': relationships})
@@ -292,13 +294,27 @@ def modify_cypher_query(query):
     # Extract all parts of the query that match the pattern (label:label)
     matches = re.findall(r'\(([a-zA-Z]+):[a-zA-Z]+\)', query)
     matches.extend(re.findall(r'\[([a-zA-Z0-9_]*):',query))
-    print(matches)
+    # print(matches)
     
     # Replace the RETURN statement with the new one
     return_statement = 'RETURN ' + ', '.join([f'{match}' for match in matches])
     modified_query = re.sub(r'RETURN .+', return_statement, query)
 
     return modified_query
+# def extract_nodes_relationships(response):
+    
+#     nodes = []
+#     relationships = []
+    
+#     for result in response['results']:
+#         for row_data in result['data']:
+#             for meta_item in row_data['meta']:
+#                 if meta_item['type'] == 'node':
+#                     nodes.append(meta_item)
+#                 elif meta_item['type'] == 'relationship':
+#                     relationships.append(meta_item)
+                    
+#     return nodes, relationships
 def extract_nodes_relationships(response):
     
     nodes = []
@@ -306,11 +322,16 @@ def extract_nodes_relationships(response):
     
     for result in response['results']:
         for row_data in result['data']:
-            for meta_item in row_data['meta']:
+            for i, meta_item in enumerate(row_data['meta']):
+                item_data = row_data['row'][i]
                 if meta_item['type'] == 'node':
-                    nodes.append(meta_item)
+                    # Merge the meta information with the actual data
+                    node = {**meta_item, **item_data}
+                    nodes.append(node)
                 elif meta_item['type'] == 'relationship':
-                    relationships.append(meta_item)
+                    # Merge the meta information with the actual data
+                    relationship = {**meta_item, **item_data}
+                    relationships.append(relationship)
                     
     return nodes, relationships
 

@@ -15,8 +15,7 @@ const QueryBuilder = ({ selectedAttributes = [], schemaName }) => {
   const [mongoQueryResults, setMongoQueryResults] = useState(null);
   const [cypherQuery, setCypherQuery] = useState('');
   const [cypherQueryResults, setCypherQueryResults] = useState(null);
-  
-  const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
+  const [nodeFields, setNodeFields] = useState([]);
   const graphContainer = useRef(null);
 const sqlKeywords = ['SELECT', 'WHERE', 'FROM', 'GROUP BY', 'HAVING', 'ORDER BY', 'RETURN', 'MATCH'];
 const mongoKeywords = ['$match', '$project', '$group', '$sort', '$lookup', '$unwind', '$limit', '$skip'];
@@ -200,35 +199,6 @@ function formatMongoQuery(query) {
     setMongoQueryResults(runMongoData.data);
   };
 
-
-  
-  const convertCypherResultsToGraph = (data) => {
-    const nodes = [];
-    const edges = [];
-  
-    data.forEach((record) => {
-      const node = {
-        id: nodes.length,
-        label: '',
-      };
-  
-      Object.entries(record).forEach(([key, value]) => {
-        const field = key.split('.').pop(); // Extract the last part of the key, e.g. 'CompanyName'
-        node.label += `${field}: ${value}\n`;
-      });
-  
-      nodes.push(node);
-    });
-  
-    if (edges.length === 0) {
-      console.log('Data without relationships:', data);
-    }
-    console.log(nodes)
-    return { nodes, edges };
-  };
-  
-
-
   const handleRunCypherQuery = async () => {
     // Call the backend API to run the Cypher query
     const response = await fetch('http://127.0.0.1:5000/run_cypher_query', {
@@ -246,6 +216,7 @@ function formatMongoQuery(query) {
     // const graphData = convertCypherResultsToGraph(responseData.data);
     // console.log(graphData)
     // setGraphData(graphData);
+    setNodeFields(responseData.fields);
   };
   // const displayGraph = (nodes, edges) => {
   //   // const data = {
@@ -275,7 +246,32 @@ function formatMongoQuery(query) {
   //   // Call createGraph after updating the state with the fetched graph data
   //   createGraph(graphData.nodes, graphData.relationships);
   // };
+  // const displayNodeAttributes = (node) => {
+  //   // Filter out meta properties and create a message string
+  //   const filteredNode = Object.entries(node).filter(([key]) => !['id', 'elementId', 'type', 'deleted'].includes(key));
+  //   const message = filteredNode.map(([field, value]) => `${field}: ${value}`).join('\n');
+  
+  //   alert(`Node attributes:\n${message}`);
+  // };
+  const displayNodeAttributes = (node, position) => {
+    const popup = document.getElementById('popup');
+    
+    // Filter out meta properties and create a message string
+    const filteredNode = Object.entries(node).filter(([key]) => !['id', 'elementId', 'type', 'deleted'].includes(key));
+    const message = filteredNode.map(([field, value]) => `${field}: ${value}`).join('<br>');
+  
+    // Set the popup content and position
+    popup.innerHTML = message;
+    popup.style.left = `${position.x}px`;
+    popup.style.top = `${position.y}px`;
+  
+    // Show the popup
+    popup.style.display = 'block';
+  };
+  
+
   const fetchAndDisplayGraph = async () => {
+    
     const response = await fetch('http://127.0.0.1:5000/generate_graph', {
       method: 'POST',
       headers: {
@@ -286,6 +282,7 @@ function formatMongoQuery(query) {
   
     const graphData = await response.json();
     console.log(graphData);
+    
   
     if (graphContainer.current) {
       const data = {
@@ -333,7 +330,28 @@ function formatMongoQuery(query) {
       };
   
       const network = new Network(graphContainer.current, data, options);
-  
+     // Inside fetchAndDisplayGraph function, after creating the network object
+      // network.on('click', (params) => {
+      //   const nodeId = params.nodes[0]; // Get the first clicked node ID
+      //   if (nodeId) {
+      //     const clickedNode = network.body.data.nodes.get(nodeId);
+      //     displayNodeAttributes(clickedNode);
+      //   }
+      // });
+      network.on('click', (params) => {
+        const nodeId = params.nodes[0];
+        if (nodeId) {
+          const clickedNode = network.body.data.nodes.get(nodeId);
+          const position = network.canvasToDOM(network.getPositions([nodeId])[nodeId]);
+          displayNodeAttributes(clickedNode, position);
+        } else {
+          // Hide the popup if clicked outside the node
+          const popup = document.getElementById('popup');
+          popup.style.display = 'none';
+        }
+      });
+      
+
       // Clear the existing nodes and edges datasets
       network.body.data.nodes.clear();
       network.body.data.edges.clear();
@@ -343,53 +361,6 @@ function formatMongoQuery(query) {
       network.body.data.edges.add(graphData.relationships);
     }
   };
-  // const createGraph = (nodes, edges) => {
-  //   if (graphContainer.current) {
-  //     const data = {
-  //       nodes,
-  //       edges
-  //     };
-  //     const options = {
-  //       nodes: {
-  //         shape: 'dot',
-  //         scaling: {
-  //           min: 10,
-  //           max: 30,
-  //           label: {
-  //             min: 8,
-  //             max: 30,
-  //             drawThreshold: 12,
-  //             maxVisible: 20
-  //           }
-  //         },
-  //         font: {
-  //           size: 12,
-  //           face: 'Tahoma'
-  //         }
-  //       },
-  //       edges: {
-  //         width: 0.15,
-  //         color: { inherit: 'from' },
-  //         smooth: {
-  //           type: 'continuous'
-  //         }
-  //       },
-  //       physics: {
-  //         stabilization: false,
-  //         barnesHut: {
-  //           gravitationalConstant: -80000,
-  //           springConstant: 0.001,
-  //           springLength: 200
-  //         }
-  //       },
-  //       interaction: {
-  //         tooltipDelay: 200,
-  //         hideEdgesOnDrag: true
-  //       }
-  //     };
-  //     new Network(graphContainer.current, data, options);
-  //   }
-  // };
   
   return (
     <div className="query-builder">
@@ -495,15 +466,6 @@ function formatMongoQuery(query) {
           <h3>Query Results:</h3>
           <div className="query-results__container">
             <table>
-              {/* <thead>
-                <tr>
-                  {selectedAttributes.map((attribute, index) => (
-                    <th key={index}>
-                      {attribute.tableName}.{attribute.attributeName}
-                    </th>
-                  ))}
-                </tr>
-              </thead> */}
               <thead>
                 <tr>
                   {checkedAttributes.map((attribute, index) => (
@@ -599,11 +561,17 @@ function formatMongoQuery(query) {
           </tbody>
         </table>
       </div>
-      <div ref={graphContainer} style={{ width: '800px', height: '600px' }}></div>
-    </div>
+    
+      
+      <div ref={graphContainer} style={{ width: '800px', height: '600px' }}>
+      </div>
+      <div id="popup" class="popup"></div>
+      </div>
+      
   )}
     </div>
     </div>
+
     </div>
   );
 };

@@ -345,3 +345,13 @@ pre {
   overflow: auto;
   text-align: left;
 }
+
+.popup {
+  position: absolute;
+  z-index: 100;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  display: none;
+}

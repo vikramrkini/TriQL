@@ -17,9 +17,9 @@ def get_nodes_and_relationships(driver, query):
         result = session.run(query)
 
         for record in result:
-            print(record)
+            # print(record)
             for value in record.values():
-                print(value)
+                # print(value)
                 if isinstance(value, list):
                     for element in value:
                         if isinstance(element, Node):
@@ -35,7 +35,7 @@ def get_nodes_and_relationships(driver, query):
 
 def run_cypher_query(driver,query):
         node,relationship = get_nodes_and_relationships(driver,query)
-        print(node,relationship)
+        # print(node,relationship)
         with driver.session() as session:
             data = session.read_transaction(extract_graph_data, query)
             return data
@@ -48,7 +48,7 @@ def run_cypher_query(driver,query):
 
 def extract_graph_data(tx, query):
     result = tx.run(query)
-    print(result)
+    # print(result)
     data = []
     for r in result:
         row = []
