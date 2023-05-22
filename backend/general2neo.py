@@ -2,18 +2,6 @@ import json
 from neo4j import GraphDatabase
 from py2neo import Graph
 
-# def create_neo4j_nodes(schema, graph):
-#     for table in schema:
-#         if schema[table]['Type'] == 'entity':
-#             data = schema[table]['Data']
-#             d = data[0] if data else {}
-#             for key, value in d.items():
-#                 if value == None:
-#                     d[key] = 'NULL'
-#             d_str = ", ".join([f"{k}:'{v}'" if isinstance(v, str) else f"{k}:{v}" for k, v in d.items()])
-
-#             query = f"CREATE (:{table} {{{d_str}}})"
-#             result = graph.run(query)
 def create_neo4j_nodes(schema, graph):
     for table in schema:
         if schema[table]['Type'] == 'entity':

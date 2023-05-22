@@ -93,11 +93,11 @@
         "Type": "relationship",
         "Cardinality": [
             [
-                "CustomerDemographics",
+                "Customers",
                 "1->1"
             ],
             [
-                "Customers",
+                "CustomerDemographics",
                 "1->1"
             ]
         ],
@@ -122,12 +122,12 @@
         "From": "CustomerCustomerDemo",
         "To": [
             [
-                "CustomerTypeID",
-                "CustomerDemographics"
-            ],
-            [
                 "CustomerID",
                 "Customers"
+            ],
+            [
+                "CustomerTypeID",
+                "CustomerDemographics"
             ]
         ],
         "Data": []
@@ -987,11 +987,11 @@
         "Type": "relationship",
         "Cardinality": [
             [
-                "Products",
+                "Orders",
                 "1->1"
             ],
             [
-                "Orders",
+                "Products",
                 "1->1"
             ]
         ],
@@ -1040,12 +1040,12 @@
         "From": "Order Details",
         "To": [
             [
-                "ProductID",
-                "Products"
-            ],
-            [
                 "OrderID",
                 "Orders"
+            ],
+            [
+                "ProductID",
+                "Products"
             ]
         ],
         "Data": [
@@ -1195,15 +1195,15 @@
         "Type": "entity",
         "Cardinality": [
             [
-                "Employees",
-                "M->1"
-            ],
-            [
                 "Shippers",
                 "M->N"
             ],
             [
                 "Customers",
+                "M->1"
+            ],
+            [
+                "Employees",
                 "M->1"
             ]
         ],
@@ -1324,16 +1324,16 @@
         "From": "Orders",
         "To": [
             [
-                "EmployeeID",
-                "Employees"
-            ],
-            [
                 "ShipVia",
                 "Shippers"
             ],
             [
                 "CustomerID",
                 "Customers"
+            ],
+            [
+                "EmployeeID",
+                "Employees"
             ]
         ],
         "Data": [
@@ -1663,11 +1663,11 @@
         "Type": "entity",
         "Cardinality": [
             [
-                "Suppliers",
+                "Categories",
                 "M->1"
             ],
             [
-                "Categories",
+                "Suppliers",
                 "M->1"
             ]
         ],
@@ -1756,12 +1756,12 @@
         "From": "Products",
         "To": [
             [
-                "SupplierID",
-                "Suppliers"
-            ],
-            [
                 "CategoryID",
                 "Categories"
+            ],
+            [
+                "SupplierID",
+                "Suppliers"
             ]
         ],
         "Data": [

@@ -41,15 +41,6 @@ def convert_general_to_mongo(schema):
                     mongo_table[col_name]['primary_key'] = True
                 if not col_dict['nullable']:
                     mongo_table[col_name]['required'] = True
-            # else :
-            #     if table_dict['Cardinality'][1] == "1->1":
-            #         #Embed the code of in the [cardinality][0]
-            #         #Embed the code of the referenced entity
-            #         parent_table_name = table_dict['Cardinality'][0]
-            #         parent_table = schema[parent_table_name]
-            #         parent_embedded = {parent_table_name: {'$ref': f'#{parent_table_name}'}}
-            #         mongo_table[parent_table_name] = parent_embedded
-
 
 
             mongo_schema[table_name] = {'schema': mongo_table}

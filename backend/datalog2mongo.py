@@ -42,74 +42,27 @@ def datalog_to_mongo(tables,query):
              '>' : ('{$gt:', '}'), '<' : ('{$lt:', '}'), '=' : ('{$eq:', '}')}
     aggregation_function = {'COUNT', 'MAX', 'MIN', 'AVG', 'SUM'}
     parsed_query = parse_query(query)
+    print(parsed_query)
     join_operation = parsed_query['join_conditions']
+    print(join_operation)
     where_clause = parsed_query['where_clause']
     where_clause = where_clause.split(',')
-    # if join_operation:
-    #     join_tables = re.findall('(\w+)\.(\w+\s*)', join_operation[0])    
-    # # join_tables = re.findall('(\w+)\.(\w+\s*)',join_operation[0])
-    # # print(join_tables)
-    #     table1,table1_attr = join_tables[0][0] ,join_tables[0][1]
-    #     table2 = join_tables[0][0],join_tables[1][0]
-    #     table2_attr = join_tables[0][1],join_tables[1][1]    
-    #     lookup_operation = "{ $lookup : { from : \"" + table2 + '\", localField : \"' + table1_attr + '\", foreignField : \"' + table2_attr + '\", as : \"' + table1 +'_'+table2 + '\"}} , { $unwind : \"$' +  table1 +'_'+table2 + "\"}"
-    # else:
-    #     lookup_operation = ''
-    #     table1 = tables[0]
-    # print(where_clause)
-    # match_conditions = ''
-    # if where_clause != ['']:
-    #     if len(where_clause) > 1:
-    #         match_conditions = "{ $match : { $and : ["
-    #         op = []
-    #         for clause in where_clause:
-    #             left,operator,right = clause.strip().split(" ")
-    #             op.append('{' + left + ' : ' + mongo_operator[operator][0] + right + mongo_operator[operator][1] + '}')
-    #         match_conditions += ','.join(op)
-    #         match_conditions += ']}}'
-    #     elif len(where_clause) == 1:
-    #         match_conditions = "{ $match : {"
-    #         op = []
-    #         for clause in where_clause:
-    #             left,operator,right = clause.strip().split(" ")
-    #             op.append(left + ' : ' + mongo_operator[operator][0] + right + mongo_operator[operator][1])
-    #         match_conditions += ','.join(op)
-    #         match_conditions += '}'
+    
     if join_operation:
         join_tables = re.findall('(\w+)\.(\w+\s*)', join_operation[0])
         table1, table1_attr = join_tables[0][0], join_tables[0][1]
         table2, table2_attr = join_tables[1][0], join_tables[1][1]
         lookup_operation = f'{{ $lookup : {{ from : \"{table2}\", localField : \"{table1_attr.strip()}\", foreignField : \"{table2_attr.strip()}\", as : \"{table1.strip()}_{table2.strip()}\" }} }}, {{ $unwind : \"${table1.strip()}_{table2.strip()}\" }}'
+    elif not join_operation and len(tables) > 1:
+        lookup_operation = ''
+        table1 = tables[0]
+        table2 = tables[0]
+
     else:
         lookup_operation = ''
         table1 = tables[0]
     match_conditions = ''
-    # if where_clause != ['']:
-    #     if len(where_clause) > 1:
-    #         match_conditions = '{ $match : { $and : ['
-    #         op = []
-    #         for clause in where_clause:
-    #             # left, operator, right = clause.strip().split(" ")
-    #             parse_condition = re.findall('^(\w+(?:\.\w+)?\s*)(>=|<=|!=|<|>|=)\s*(\'.+?\'|".+?"|\w+)',clause)
-    #             # print(parse_condition)
-    #             left,operator,right = parse_condition[0][0].strip(), parse_condition[0][1].strip(), parse_condition[0][2].strip()
-                
-    #             op.append(f'{{ \"{left}\" : {mongo_operator[operator][0]}{right}{mongo_operator[operator][1]} }}')
-    #         match_conditions += ','.join(op)
-    #         match_conditions += ']}}'
-    #     elif len(where_clause) == 1:
-    #         match_conditions = '{ $match : {'
-    #         op = []
-    #         print(where_clause)
-    #         for clause in where_clause:
-                
-    #             parse_condition = re.findall('^(\w+(?:\.\w+)?\s*)(>=|<=|!=|<|>|=)\s*(\'.+?\'|".+?"|\w+)',clause)
-    #             # print(parse_condition)
-    #             left,operator,right = parse_condition[0][0].strip(), parse_condition[0][1].strip(), parse_condition[0][2].strip()
-                
-    #             op.append(f'\"{left}\" : {mongo_operator[operator][0]}{right}{mongo_operator[operator][1]}')
-    #         match_conditions += ','.join(op)
-    #         match_conditions += '}}'
+    
     if where_clause != ['']:
         if len(where_clause) > 1:
             match_conditions = '{ $match : { $and : ['
@@ -117,7 +70,8 @@ def datalog_to_mongo(tables,query):
             
             where_clause = [where_clause[clause].strip() for clause in range(len(where_clause))]
             for clause in where_clause:
-                
+                if not join_operation and table2 in clause:
+                    continue
                 parse_condition = re.findall('^(\w+(?:\.\w+)?\s*)(>=|<=|!=|<|>|=)\s*(\'.+?\'|".+?"|\w+)', clause)
                 # print(parse_condition)
                 left, operator, right = parse_condition[0][0].strip(), parse_condition[0][1].strip(), parse_condition[0][2].strip()
@@ -177,16 +131,7 @@ def datalog_to_mongo(tables,query):
     query = f'db.{table1}.aggregate([{lookup_operation}{" , " if lookup_operation else ""}{match_conditions}{" , " if match_conditions else ""}{project_operation}])'
 
     return query
-    query = f'db.{table1}.aggregate([{lookup_operation}{" , " if lookup_operation else ""}{match_conditions}{" , " if match_conditions else ""}{project_operation}])'               
-    # #Project opertation 
-    # project_operation = " { \"$project\" : { \"_id\" : 0 "
-    # for attr in parsed_query['head']:
-    #      project_operation += f', \"{attr}\" : 1'
-    # project_operation += '} }'
-    # query = 'db.' + table1 + '.aggregate([' + lookup_operation + ',' + match_conditions + ',' + project_operation + '])'
-    query = f'db.{table1}.aggregate([{lookup_operation}{"," if lookup_operation else ""}{match_conditions}{"," if match_conditions else ""}{project_operation}])'
-
-    return query 
+    
         
 
 # tables = ["Orders"]
